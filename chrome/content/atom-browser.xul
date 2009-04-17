@@ -1,0 +1,149 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<window id="atombrowse-window" title="Atom Browser" orient="horizontal" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:html="http://www.w3.org/1999/xhtml">
+	
+	<script type="text/javascript">
+		var doc = window.document;
+		var req = null;
+		var lastUrl = null;
+	
+		var ELEMENT_NODE = 1;
+		var TEXT_NODE = 3;
+		
+		function loadFromBox() {
+			loadUrl(doc.getElementById("address").value);
+		}
+		
+		function loadUrl(url) {
+			window.document.getElementById("xmldiv").innerHTML = "";
+			req = new XMLHttpRequest();
+		    req.onload = loadResponse;
+			lastUrl = url;
+		    req.open("GET", url, true);
+		    req.send(null);
+			window.document.getElementById("status").setAttribute("value", "Loading...");
+		}
+		
+		function loadResponse() {
+			if (req.readyState == 4) {
+	        	if (req.status == 200) {
+	            	var xmlDoc = req.responseXML;
+					if (xmlDoc == null) {
+						alert("Couldn't parse result XML.");
+					} else {
+						var xmldiv = window.document.getElementById("xmldiv");
+						var historyItem = doc.createElement("menuitem");
+						historyItem.setAttribute("label", lastUrl);
+						doc.getElementById("history").appendChild(historyItem);
+						drawXmlElement(xmlDoc, xmldiv, 0, "none", null);
+					}
+				} else {
+					alert("http error");
+					var xmldiv = window.document.getElementById("xmldiv");
+					var errDiv = doc.createElement("div");
+					errDiv.appendChild(doc.createTextNode("HTTP Error Code: " + req.status));
+					xmldiv.appendChild(errDiv);
+					errDiv = doc.createElement("div");
+					errDiv.appendChild(doc.createTextNode(req.responseText));
+					xmldiv.appendChild(errDiv);
+				}
+				window.document.getElementById("status").setAttribute("value","Done");
+			}
+		}
+		
+		function drawXmlElement(xmlDoc, xmldiv, spacing, parent, endSpan) {
+			var nodesAdded = 0;
+			
+			for (i in xmlDoc.childNodes) {
+				if (! isNaN(i)) {
+					var node = xmlDoc.childNodes[i];
+					
+					if (node.nodeType == TEXT_NODE) {
+					
+						nodesAdded += 1;
+						var tagdiv = doc.createElement("div");
+						var style = "font-size: 12px; padding-left: " + spacing + "em; display: block;";
+						if (parent == "link") {
+							style += " color: green; cursor: pointer;";
+							tagdiv.setAttribute("onclick", "loadUrl('" + node.nodeValue + "');")
+						}
+						tagdiv.setAttribute("style", style);
+						tagdiv.appendChild(doc.createTextNode(node.nodeValue));
+						xmldiv.appendChild(tagdiv);
+						
+					} else if (node.nodeType == ELEMENT_NODE) {
+					
+						nodesAdded += 1;
+						var tagdiv = doc.createElement("div");
+						tagdiv.setAttribute("style", "font-size: 12px; padding-left: " + spacing + "em; display: block; color: blue;");
+						var span = doc.createElement("span");
+						span.appendChild(doc.createTextNode("&lt;" + node.nodeName));
+						tagdiv.appendChild(span);
+						
+						for (j in node.attributes) {
+							if (! isNaN(j)) {
+								if (node.attributes[j].nodeName == "href") {
+									span = doc.createElement("span");
+									span.setAttribute("style", "margin-left: 4px");
+									span.appendChild(doc.createTextNode(" " + node.attributes[j].nodeName + "="));
+									tagdiv.appendChild(span);
+									span = doc.createElement("span");
+									span.appendChild(doc.createTextNode("\"" + node.attributes[j].nodeValue + "\""));
+									span.setAttribute("onclick", "loadUrl('" + node.attributes[j].nodeValue + "')");
+									span.setAttribute("style", "color: green; cursor: pointer;")
+									tagdiv.appendChild(span);
+								} else {
+									span = doc.createElement("span");
+									span.setAttribute("style", "margin-left: 4px");
+									span.appendChild(doc.createTextNode(" " + node.attributes[j].nodeName + "=")); 		
+									tagdiv.appendChild(span);
+									span = doc.createElement("span");
+									span.setAttribute("style", "color: red");
+									span.appendChild(doc.createTextNode("\"" + node.attributes[j].nodeValue + "\""));
+									tagdiv.appendChild(span);
+								}
+							}
+						}
+					
+						var endSpan = doc.createElement("span");
+						endSpan.appendChild(doc.createTextNode("&gt;"));
+						tagdiv.appendChild(endSpan);
+						xmldiv.appendChild(tagdiv);
+						var childrenAdded = drawXmlElement(node, xmldiv, spacing+2, node.nodeName, endSpan);
+						if (childrenAdded == 0) {
+							endSpan.removeChild(endSpan.childNodes[0]);
+							endSpan.appendChild(doc.createTextNode("/&gt;"));
+						}
+				
+						if (childrenAdded > 0) {
+							var tagdiv = doc.createElement("div");
+							tagdiv.setAttribute("style", "font-size: 12px; padding-left: " + spacing + "em; display: block; color: blue;");
+							tagdiv.appendChild(doc.createTextNode("&lt;/" + node.nodeName + "&gt;"));
+							xmldiv.appendChild(tagdiv);
+						} 
+					}
+				}
+			}
+			return nodesAdded;
+		}
+		
+	</script>
+	
+	<vbox>
+		<hbox>
+			<label value="Address:"/>
+			<menulist editable="true" flex="1" id="address" onchange="loadFromBox()">
+				<menupopup id="history">
+				</menupopup>
+			</menulist>
+			<button id="goButton" label="Go" onclick="loadFromBox()"/>
+		</hbox>
+		<hbox>
+			<html:div id="xmldiv" style="overflow: auto; background-color: white; border: 1px solid black; margin: 4px; padding: 4px; width: 800px; height: 500px;"></html:div>
+		</hbox>
+		<hbox>
+			<label id="status" value="Ready"/>
+		</hbox>
+	</vbox>
+</window>

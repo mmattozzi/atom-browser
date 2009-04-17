@@ -1,0 +1,2 @@
+content		atom-browser    	chrome/content/
+overlay 	chrome://browser/content/browser.xul 	chrome://atom-browser/content/atom-browser-overlay.xul

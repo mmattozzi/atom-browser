@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<project name="atom-browser" default="createxpi">
+
+    <delete file="AtomBrowser.xpi" />
+    
+    <target name="createxpi">
+        <zip destfile="AtomBrowser.xpi">
+            <zipfileset dir="." includes="chrome/* chrome/content chrome/content/*" />
+            <zipfileset dir="." includes="install.rdf" />
+            <zipfileset dir="." includes="chrome.manifest" />
+        </zip>
+    </target>
+
+    <target name="clean" />
+
+</project>

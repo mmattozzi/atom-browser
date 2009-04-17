@@ -1,0 +1,10 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+
+<overlay id="atom-browser-overlay" 
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
+  <menupopup id="menu_ToolsPopup"> 
+    <menuitem id="atom-browser-launch" label="Atom Browser" 
+        oncommand='window.open("chrome://atom-browser/content/atom-browser.xul", "Atom Browser", "chrome,resize=yes,menubar=yes");' onresize='alert("aaah!");'/> 
+  </menupopup> 
+</overlay>
